@@ -1,0 +1,54 @@
+{
+    "game": {
+      "gameInfo": {
+        "gameId": "string",
+        "gameType": "standard|custom",
+        "rounds": "number",
+        "betAmount": "number",
+        "status": "waiting|playing|finished",
+        "createdAt": "datetime",
+        "startedAt": "datetime",
+        "endedAt": "datetime"
+      },
+      "players": {
+        "player1": {
+          "userId": "string",
+          "nickname": "string",
+          "league": "string",
+          "ready": "boolean",
+          "connected": "boolean",
+          "jokersLeft": "number"
+        },
+        "player2": {
+          "userId": "string",
+          "nickname": "string",
+          "league": "string",
+          "ready": "boolean",
+          "connected": "boolean",
+          "jokersLeft": "number"
+        }
+      },
+      "rounds": [{
+        "roundNumber": "number",
+        "player1Move": "rock|paper|scissors|null",
+        "player2Move": "rock|paper|scissors|null",
+        "jokersUsed": {
+          "player1": "block|blind|bet|null",
+          "player2": "block|blind|bet|null"
+        },
+        "winner": "player1|player2|draw",
+        "timestamp": "datetime"
+      }],
+      "result": {
+        "winner": "string",
+        "player1Score": "number",
+        "player2Score": "number",
+        "goldExchange": "number"
+      }
+    },
+    "gameType": {
+    "typeId": "string",
+    "name": "string",
+    "currentRules": "object"
+}
+  }

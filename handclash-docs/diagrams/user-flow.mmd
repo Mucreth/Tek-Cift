@@ -1,0 +1,35 @@
+graph TD
+    A[App Açılış] --> B{İlk Giriş mi?}
+    B -->|Evet| C[Hoşgeldin Ekranı]
+    B -->|Hayır| D[Ana Menü]
+    
+    C --> C1[Nickname Belirleme]
+    C1 --> C2[1000 Gold Hoşgeldin Bonusu]
+    C2 --> D
+    
+    D --> E[Oyun Seçimi]
+    D --> F[Profil]
+    D --> G[Mağaza]
+    D --> H[Günlük Bonus]
+    
+    E --> E1[Hızlı Başlat]
+    E --> E2[Oyun Başlat]
+    
+    E1 --> I{Yeterli Gold Var mı?}
+    I -->|Evet| J[Bahis Seçimi]
+    I -->|Hayır| K[Gold Kazanma Yolları]
+    
+    J --> L[Rakip Arama]
+    L --> M[Oyun]
+    M --> N[Sonuç]
+    
+    K --> K1[Reklam İzle]
+    K --> K2[Günlük Bonus]
+    K --> K3[Mağazadan Al]
+    
+    F --> F1[İstatistikler]
+    F --> F2[Başarımlar]
+    F --> F3[Lig Durumu]
+    
+    G --> G1[Gold Satın Al]
+    G --> G2[Premium Üyelik]

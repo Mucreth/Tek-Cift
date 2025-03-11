@@ -1,0 +1,150 @@
+classDiagram
+    class Users {
+        userId string PK
+        deviceId string
+        appleId string
+        nickname string
+        isPremium boolean
+        currentGold int
+        currentLeague string
+        level int
+        xp int
+        createdAt datetime
+        lastLoginAt datetime
+    }
+
+    class Statistics {
+        userId string FK
+        rockPlayed int
+        paperPlayed int
+        scissorsPlayed int
+        rockWins int
+        paperWins int
+        scissorsWins int
+        jokerBlockUsed int
+        jokerBlindUsed int
+        jokerBetUsed int
+        totalWins int
+        totalLosses int
+        winRate float
+    }
+
+    class Leaderboards {
+        boardId string PK
+        type string
+        period string
+        userId string FK
+        score int
+        rank int
+        updatedAt datetime
+    }
+
+    class Games {
+        gameId string PK
+        player1Id string FK
+        player2Id string FK
+        betAmount int
+        status string
+        winner string
+        startedAt datetime
+        endedAt datetime
+    }
+
+    class GameTypes {
+        gameTypeId string PK
+        name string
+        description string
+        isActive boolean
+        inBet int
+        maxBet int
+        rules JSON
+        jokerSystem JSON
+    }
+
+    Games -- GameTypes
+
+    class GameRounds {
+        roundId string PK
+        gameId string FK
+        roundNumber int
+        player1Move string
+        player2Move string
+        jokersUsed JSON
+        winner string
+    }
+
+    class Penalties {
+        penaltyId string PK
+        userId string FK
+        type string
+        amount int
+        reason string
+        createdAt datetime
+    }
+
+    class Support {
+        ticketId string PK
+        userId string FK
+        type string
+        status string
+        message text
+        createdAt datetime
+    }
+
+    class Premium {
+        userId string FK
+        startDate datetime
+        endDate datetime
+        features JSON
+        paymentHistory JSON
+    }
+
+    class Friends {
+        friendshipId string PK
+        userId string FK
+        friendId string FK
+        status string "pending/accepted"
+        createdAt datetime
+        lastGameAt datetime
+    }
+
+    class RecentMatches {
+        matchId string PK
+        userId string FK
+        opponentId string FK
+        gameId string FK
+        playedAt datetime
+        gameResult string
+    }
+
+    class FriendInvites {
+        inviteId string PK
+        senderId string FK
+        receiverId string FK
+        status string "pending/accepted/rejected"
+        createdAt datetime
+        bonusGiven boolean
+    }
+
+    class PrivateRooms {
+        roomId string PK
+        hostId string FK
+        guestId string FK
+        betAmount int
+        rounds int
+        status string
+        createdAt datetime
+        expiresAt datetime
+    }
+
+    Users -- Friends
+    Users -- RecentMatches
+    Users -- FriendInvites
+    Users -- PrivateRooms
+    Users -- Statistics
+    Users -- Games
+    Users -- Leaderboards
+    Users -- Penalties
+    Users -- Support
+    Users -- Premium
+    Games -- GameRounds

@@ -1,0 +1,74 @@
+{
+    "leagues": {
+      "BRONZE": {
+        "minGold": 2500,
+        "minBet": 100,
+        "maxBet": 500
+      },
+      "SILVER": {
+        "minGold": 10000,
+        "minBet": 500,
+        "maxBet": 2000
+      },
+      "GOLD": {
+        "minGold": 25000,
+        "minBet": 2000,
+        "maxBet": 5000
+      },
+      "PLATINUM": {
+        "minGold": 75000,
+        "minBet": 5000,
+        "maxBet": 15000
+      },
+      "DIAMOND": {
+        "minGold": 250000,
+        "minBet": 15000,
+        "maxBet": 50000
+      },
+      "MASTER": {
+        "minGold": 750000,
+        "minBet": 50000,
+        "maxBet": 150000
+      },
+      "GRANDMASTER": {
+        "minGold": 2500000,
+        "minBet": 150000,
+        "maxBet": 500000
+      },
+      "LEGEND": {
+        "minGold": 10000000,
+        "minBet": 500000,
+        "maxBet": 2000000
+      }
+    },
+    "gameSettings": {
+      "roundTime": 5,
+      "jokerTime": 10,
+      "reconnectTime": 30,
+      "winMultiplier": 1.5,
+      "maxDailyAds": 10,
+      "adReward": 50,
+      "dailyBonuses": [100, 150, 200, 250, 300, 400, 800]
+    },
+    "levelSystem": {
+      "winXP": 100,
+      "loseXP": 25,
+      "streakBonusXP": 20,
+      "dailyLoginXP": 50
+    },
+
+    "gameTypes": {
+    "rockPaperScissors": {
+        "id": "rps",
+        "name": "Taş Kağıt Makas",
+        "timeLimit": 5,
+        "validMoves": ["rock", "paper", "scissors"]
+    },
+    "oddEven": {
+        "id": "oddeven",
+        "name": "Tek mi Çift mi",
+        "timeLimit": 5,
+        "validMoves": ["odd", "even"]
+    }
+}
+  }

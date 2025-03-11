@@ -1,0 +1,52 @@
+{
+    "statistics": {
+      "userId": "string",
+      "overall": {
+        "totalGames": "number",
+        "wins": "number",
+        "losses": "number",
+        "draws": "number",
+        "winRate": "number",
+        "totalGoldEarned": "number",
+        "totalGoldSpent": "number",
+        "highestWinStreak": "number"
+      },
+      "moveStats": {
+        "rock": {
+          "played": "number",
+          "wins": "number",
+          "winRate": "number"
+        },
+        "paper": {
+          "played": "number",
+          "wins": "number",
+          "winRate": "number"
+        },
+        "scissors": {
+          "played": "number",
+          "wins": "number",
+          "winRate": "number"
+        }
+      },
+      "jokerStats": {
+        "block": {
+          "used": "number",
+          "successful": "number"
+        },
+        "blind": {
+          "used": "number",
+          "successful": "number"
+        },
+        "bet": {
+          "used": "number",
+          "successful": "number"
+        }
+      },
+      "leagueHistory": [{
+        "league": "string",
+        "enteredAt": "datetime",
+        "exitedAt": "datetime",
+        "highestPoints": "number"
+      }]
+    }
+  }

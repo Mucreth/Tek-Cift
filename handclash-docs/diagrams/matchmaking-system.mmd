@@ -1,0 +1,30 @@
+sequenceDiagram
+    participant P as Oyuncu
+    participant S as Sistem
+    participant Q as Eşleşme Kuyruğu
+    participant T as Masa
+    
+    rect rgb(40, 40, 40)
+        Note over P,T: Oyun Başlat (Özel Masa)
+        P->>S: Oyun Başlat
+        S->>P: Masa Ayarları Menüsü
+        P->>S: Ayarlar (Round/Gold)
+        S->>T: Yeni Masa Oluştur
+        T->>Q: Bekleme Listesine Ekle
+    end
+    
+    rect rgb(40, 40, 40)
+        Note over P,T: Hızlı Başlat
+        P->>S: Hızlı Başlat
+        S->>Q: Uygun Masa Kontrolü
+        
+        alt Uygun Masa Varsa
+            Q->>T: Mevcut Masaya Katıl
+            T->>P: Oyun Başladı
+        else Uygun Masa Yoksa
+            S->>T: Standart Masa Oluştur (9 Round)
+            Note over S: Ligine göre ortalama gold
+            T->>Q: Bekleme Listesine Ekle
+            T->>P: Rakip Bekleniyor
+        end
+    end

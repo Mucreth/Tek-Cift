@@ -1,0 +1,45 @@
+sequenceDiagram
+    participant P1 as Oyuncu 1
+    participant Game as Oyun Sistemi
+    participant P2 as Oyuncu 2
+
+    Note over P1,P2: Oyun Tipi Seçimi
+    P1->>Game: Oyun Tipi Seç
+    Game->>P1: Oyun Kuralları
+    P1->>Game: Onay
+
+    Note over P1,P2: Eşleşme Fazı
+    P1->>Game: Oyun Ara
+    P2->>Game: Oyun Ara
+    Game->>P1: Rakip Bulundu
+    Game->>P2: Rakip Bulundu
+    
+    Note over P1,P2: Hazırlık
+    Game->>P1: Hazır mısın?
+    Game->>P2: Hazır mısın?
+    P1->>Game: Hazır
+    P2->>Game: Hazır
+
+    loop Her Round İçin
+        Note over P1,P2: Normal El (5sn)
+        Game->>P1: Kart Seçim Süresi
+        Game->>P2: Kart Seçim Süresi
+        P1->>Game: Kart Seçimi
+        P2->>Game: Kart Seçimi
+        
+        Game->>P1: El Sonucu + Skor
+        Game->>P2: El Sonucu + Skor
+
+        Note over P1,P2: Joker Fazı (10sn)
+        Game->>P1: Joker Seçim Ekranı
+        Game->>P2: Joker Seçim Ekranı
+
+        alt Joker Kullanımı
+            P1->>Game: Joker Seçimi (Opsiyonel)
+            P2->>Game: Joker Seçimi (Opsiyonel)
+        end
+    end
+
+    Note over P1,P2: Oyun Sonu
+    Game->>P1: Final Skor + Kazanç/Kayıp
+    Game->>P2: Final Skor + Kazanç/Kayıp

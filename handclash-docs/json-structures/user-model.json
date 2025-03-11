@@ -1,0 +1,40 @@
+{
+    "user": {
+      "baseInfo": {
+        "userId": "string",
+        "deviceId": "string",
+        "appleId": "string",
+        "nickname": "string",
+        "createdAt": "datetime",
+        "lastLoginAt": "datetime",
+        "status": "active|banned|suspended"
+      },
+      "gameInfo": {
+        "currentGold": "number",
+        "level": "number",
+        "xp": "number",
+        "currentLeague": "string",
+        "leaguePoints": "number",
+        "winStreak": "number",
+        "bestStreak": "number"
+      },
+      "premium": {
+        "isPremium": "boolean",
+        "startDate": "datetime",
+        "endDate": "datetime",
+        "features": ["string"]
+      },
+      "dailyLimits": {
+        "gamesPlayed": "number",
+        "adsWatched": "number",
+        "lastDailyBonus": "datetime",
+        "consecutiveLogins": "number"
+      },
+      "settings": {
+        "notifications": "boolean",
+        "sound": "boolean",
+        "vibration": "boolean",
+        "language": "string"
+      }
+    }
+  }

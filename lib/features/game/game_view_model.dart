@@ -359,6 +359,7 @@ String get timerText {
   /// Oyun eşleşme olayı
   void _handleGameMatched(Map<String, dynamic> data) {
     print('Oyun eşleşti. ID: ${data['gameId']}');
+    print('Eşleşme verileri: $data'); // Debug için
     
     // Eşleşme olayını OnlineGameLogic'e ilet
     _onlineLogic?.handleGameMatched(_state, data);
@@ -369,9 +370,49 @@ String get timerText {
     // Eşleşme durumunu güncelle
     matchState.value = GameMatchState.opponentFound;
     
-    // Takım rengi ve rakip adı bilgilerini al
+    // Takım rengi ve rakip bilgilerini al
     bool isGreenTeam = data['isGreenTeam'] == 1 || data['isGreenTeam'] == true;
-    String? opponentNickname = data['opponentNickname'] ?? 'Rakip';
+    
+    // Rakip bilgilerini oluştur
+    Map<String, dynamic> opponentData = {};
+    if (data.containsKey('opponent')) {
+      opponentData = data['opponent'] is Map<String, dynamic> ? 
+                   data['opponent'] as Map<String, dynamic> : 
+                   {'id': 'opponent'};
+      
+      // Rakip ID'sini kontrol et
+      final opponentId = opponentData['id'] ?? opponentData['userId'] ?? opponentData['user_id'] ?? 'rakip_id';
+      
+      // Verileri hazırla - onOpponentFound callback'ine aktarılacak
+      Map<String, dynamic> opponentInfo = {
+        'userId': opponentId,
+        'nickname': 'Rakip',
+        'win_rate': 50.0,
+      };
+      
+      // Server'dan gelen rakip bilgilerini almaya çalış
+      if (data.containsKey('opponent_info')) {
+        // Tam rakip bilgisi varsa
+        opponentInfo = data['opponent_info'] is Map<String, dynamic> ? 
+                    data['opponent_info'] as Map<String, dynamic> : 
+                    opponentInfo;
+      } else if (opponentData.containsKey('nickname')) {
+        // Sadece nickname bilgisi varsa
+        opponentInfo['nickname'] = opponentData['nickname'];
+      }
+      
+      // Win rate bilgisi varsa al
+      if (opponentData.containsKey('win_rate')) {
+        opponentInfo['win_rate'] = opponentData['win_rate'];
+      } else if (opponentData.containsKey('winRate')) {
+        opponentInfo['win_rate'] = opponentData['winRate'];
+      }
+      
+      // Callback'e gönder - GameScreen bu veriyi alacak
+      if (onOpponentFound != null) {
+        onOpponentFound!(opponentInfo);
+      }
+    }
     
     // State'i güncelle
     _state = _state.copyWith(
@@ -381,7 +422,10 @@ String get timerText {
       isOpponentReady: false,
       betAmount: data['betAmount'] ?? 1000,
       isGreenTeam: isGreenTeam,
-      opponentName: opponentNickname,
+      // Rakip adını belirle
+      opponentName: opponentData.containsKey('nickname') ? 
+                    opponentData['nickname'] : 
+                    'Rakip',
     );
     
     notifyListeners();

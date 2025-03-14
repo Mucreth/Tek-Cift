@@ -119,6 +119,7 @@ class OpponentCardArea extends StatelessWidget {
       isSelected: showSelected, // Sadece revealing ve roundResult fazlarında seçili göster
       isBlocked: false,
       onTap: null, // Rakip kartlarına tıklanamaz
+      currentPhase: currentPhase, // Bu satırı ekleyin
     );
   }
 }

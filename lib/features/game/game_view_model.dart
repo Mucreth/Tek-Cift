@@ -269,38 +269,51 @@ String get timerText {
     _onlineLogic?.markPlayerReady();
   }
   
-  /// Hamle yap
-  void makeMove(String move) {
-    // Hamle yapma durumunu kontrol et
-    if (!_state.isRoundActive ||
-        (_state.currentPhase != GamePhase.playing && 
-         _state.currentPhase != GamePhase.cardSelect)) {
-      return;
-    }
-    
-    // Bloke durumunu kontrol et
-    if (_state.blockedMoves.contains(move)) {
-      return;
-    }
-    
-    // Kart yerleştirme sesi
-    _feedbackService.playCardPlaceSound();
-    
-    if (isAIGame) {
-      // AI modunda, hamle AI'ye iletilir
-      _aiLogic?.handlePlayerMove(_state, move);
-    } else {
-      // Çevrimiçi modda, hamleyi sunucuya gönder
-      
-      // Önce state'i güncelle
-      _state = _state.copyWith(selectedMove: move);
-      notifyListeners();
-      
-      // Sonra sunucuya gönder
-      _onlineLogic?.makeMove(move);
-    }
+void makeMove(String move) {
+  // Debug log ekleyin
+  print("makeMove çağrıldı. Hamle: $move, Mevcut faz: ${_state.currentPhase}");
+  
+  // Hamle yapma durumunu kontrol et
+  if (!_state.isRoundActive ||
+      (_state.currentPhase != GamePhase.playing && 
+       _state.currentPhase != GamePhase.cardSelect)) {
+    print("Hamle yapılamaz, faz uygun değil: ${_state.currentPhase}");
+    return;
   }
-
+  
+  // Bloke durumunu kontrol et
+  if (_state.blockedMoves.contains(move)) {
+    print("Hamle bloke edilmiş: $move");
+    return;
+  }
+  
+  // Kart yerleştirme sesi
+  _feedbackService.playCardPlaceSound();
+  
+  if (isAIGame) {
+    // AI modunda, hamle AI'ye iletilir
+    _aiLogic?.handlePlayerMove(_state, move);
+  } else {
+    // Çevrimiçi modda, hamleyi sunucuya gönder
+    
+    // Önce mevcut seçimi kaydet
+    final oldMove = _state.selectedMove;
+    
+    // State'i güncelle
+    _state = _state.copyWith(
+      selectedMove: move,
+    );
+    
+    // Debug log
+    print("State güncellendi. Yeni seçim: ${_state.selectedMove}, Eski seçim: $oldMove");
+    
+    // UI'ı güncelle
+    notifyListeners();
+    
+    // Sonra sunucuya gönder
+    _onlineLogic?.makeMove(move);
+  }
+}
   
   
   /// Joker kullan
@@ -478,21 +491,27 @@ void _handleGameMatched(Map<String, dynamic> data) {
   }
   
   /// Kart seçim aşaması
-  void _handleCardSelectPhase(Map<String, dynamic> data) {
-    // Önceki zamanayıcıları temizle
-    _timerManager.clearAllTimers();
-    
-    // Faz yöneticisine ilet
-    _phaseManager.handleCardSelectPhase(_state, data);
-    
-    // Süre sonunda otomatik olarak seçilen hamleyi gönderecek
-    _timerManager.startCardSelectTimer(
-      _state, 
-      data['timeLimit'] ?? 8, 
-      gameType, 
-      _onlineLogic?.makeMove ?? ((move) {})
-    );
-  }
+void _handleCardSelectPhase(Map<String, dynamic> data) {
+  // Önceki zamanayıcıları temizle
+  _timerManager.clearAllTimers();
+  
+  // Debug için
+  print("KART SEÇİM FAZINA GEÇİLDİ - Önceki seçim: ${_state.selectedMove}");
+  
+  // Faz yöneticisine ilet
+  _phaseManager.handleCardSelectPhase(_state, data);
+  
+  // Debug için - sonrası
+  print("KART SEÇİM FAZINDAN SONRA - Güncel seçim: ${_state.selectedMove}");
+  
+  // Süre sonunda otomatik olarak seçilen hamleyi gönderecek
+  _timerManager.startCardSelectTimer(
+    _state, 
+    data['timeLimit'] ?? 8, 
+    gameType, 
+    _onlineLogic?.makeMove ?? ((move) {})
+  );
+}
   
   /// Kart açılma aşaması
   void _handleRevealingPhase(Map<String, dynamic> data) {

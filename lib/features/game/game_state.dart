@@ -39,6 +39,7 @@ class GameState {
   final int? goldLost;
 
   final String? opponentName;
+    final String? lastSelectedMove;
 
   GameState({
     // Hazırlık varsayılanları
@@ -82,6 +83,7 @@ class GameState {
     this.goldLost,
 
     this.opponentName,
+        this.lastSelectedMove,
   });
 
   GameState copyWith({
@@ -122,6 +124,7 @@ class GameState {
     int? goldLost,
 
     String? opponentName,
+      String? lastSelectedMove,
   }) {
     return GameState(
       // Hazırlık
@@ -161,6 +164,7 @@ class GameState {
       goldLost: goldLost ?? this.goldLost,
 
       opponentName: opponentName ?? this.opponentName,
+       lastSelectedMove: lastSelectedMove ?? this.lastSelectedMove,
     );
   }
 

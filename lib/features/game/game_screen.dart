@@ -48,7 +48,7 @@ class _GameScreenState extends State<GameScreen> {
   UserInfo? opponent;
   bool _isLoading = false; // Doğru yer burası - State sınıfı içinde
 
-@override
+  @override
   void initState() {
     super.initState();
     // İsAIGame parametresini ViewMode'a iletiyoruz
@@ -83,7 +83,7 @@ class _GameScreenState extends State<GameScreen> {
 
   void _showMatchmakingPopup() {
     if (widget.isAIGame) return; // AI modunda gösterme
-    
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -97,337 +97,356 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   Future<void> _setupGame() async {
-  try {
-    // Mevcut kullanıcı bilgilerini al
-    final userData = await AuthService().getCurrentUser();
-    if (userData != null) {
-      // Win rate'i doğru formatlayalım
-      String formattedWinRate;
-      
-      if (userData.containsKey('win_rate')) {
-        // Önce sayısal değere dönüştürüp sonra formatlayalım
-        double winRateValue = 0.0;
-        
-        if (userData['win_rate'] is double) {
-          winRateValue = userData['win_rate'];
-        } else if (userData['win_rate'] is int) {
-          winRateValue = (userData['win_rate'] as int).toDouble();
+    try {
+      // Mevcut kullanıcı bilgilerini al
+      final userData = await AuthService().getCurrentUser();
+      if (userData != null) {
+        // Win rate'i doğru formatlayalım
+        String formattedWinRate;
+
+        if (userData.containsKey('win_rate')) {
+          // Önce sayısal değere dönüştürüp sonra formatlayalım
+          double winRateValue = 0.0;
+
+          if (userData['win_rate'] is double) {
+            winRateValue = userData['win_rate'];
+          } else if (userData['win_rate'] is int) {
+            winRateValue = (userData['win_rate'] as int).toDouble();
+          } else {
+            // String'den double'a çevirmeyi dene
+            winRateValue =
+                double.tryParse(
+                  userData['win_rate'].toString().replaceAll(',', '.'),
+                ) ??
+                0.0;
+          }
+
+          // Formatla: 1 decimal basamaklı ve % işareti
+          formattedWinRate = '${winRateValue.toStringAsFixed(1)}%';
         } else {
-          // String'den double'a çevirmeyi dene
-          winRateValue = double.tryParse(userData['win_rate'].toString().replaceAll(',', '.')) ?? 0.0;
+          formattedWinRate = '0.0%';
         }
-        
-        // Formatla: 1 decimal basamaklı ve % işareti
-        formattedWinRate = '${winRateValue.toStringAsFixed(1)}%';
-      } else {
-        formattedWinRate = '0.0%';
+
+        setState(() {
+          currentUser = UserInfo(
+            userId: userData['user_id'],
+            nickname: userData['nickname'],
+            winRate: formattedWinRate, // Formatlanmış win rate kullan
+            isGreenTeam: true, // Başlangıç değeri, sonradan güncellenecek
+          );
+        });
       }
-      
-      setState(() {
-        currentUser = UserInfo(
-          userId: userData['user_id'],
-          nickname: userData['nickname'],
-          winRate: formattedWinRate,  // Formatlanmış win rate kullan
-          isGreenTeam: true, // Başlangıç değeri, sonradan güncellenecek
-        );
-      });
-    }
 
-    // AI modunda rakip bilgilerini manuel olarak oluştur
-    if (widget.isAIGame) {
-      setState(() {
-        // AI rakibi oluştur
-        opponent = UserInfo(
-          userId: 'ai',
-          nickname: 'AI Rakip',
-          winRate: '50.0%',  // Formatlanmış değer
-          isGreenTeam: false, // AI her zaman kırmızı takım
-        );
-      });
-      
-      // AI oyununu doğrudan başlat
+      // AI modunda rakip bilgilerini manuel olarak oluştur
+      if (widget.isAIGame) {
+        setState(() {
+          // AI rakibi oluştur
+          opponent = UserInfo(
+            userId: 'ai',
+            nickname: 'AI Rakip',
+            winRate: '50.0%', // Formatlanmış değer
+            isGreenTeam: false, // AI her zaman kırmızı takım
+          );
+        });
+
+        // AI oyununu doğrudan başlat
+        _viewModel.startGame();
+        return;
+      }
+
+      // Çevrimiçi modda devam et
+      _viewModel.onOpponentFound = (opponentData) {
+        final isGreenTeam = _viewModel.state.isGreenTeam;
+        print("Gelen rakip verileri: $opponentData"); // Debug için
+
+        setState(() {
+          // UserInfo'yu güncelle - artık isGreenTeam değeri doğru
+          if (currentUser != null) {
+            currentUser = currentUser!.copyWith(isGreenTeam: isGreenTeam);
+          }
+
+          // Rakip her zaman farklı renktedir
+          opponent = UserInfo.fromJson(opponentData, isGreenTeam: !isGreenTeam);
+          print(
+            "İşlenmiş rakip: ${opponent?.nickname}, ${opponent?.winRate}",
+          ); // Debug için
+        });
+      };
+
       _viewModel.startGame();
-      return;
-    }
-
-    // Çevrimiçi modda devam et
-    _viewModel.onOpponentFound = (opponentData) {
-      final isGreenTeam = _viewModel.state.isGreenTeam;
-      print("Gelen rakip verileri: $opponentData"); // Debug için
-
-      setState(() {
-        // UserInfo'yu güncelle - artık isGreenTeam değeri doğru
-        if (currentUser != null) {
-          currentUser = currentUser!.copyWith(isGreenTeam: isGreenTeam);
-        }
-
-        // Rakip her zaman farklı renktedir
-        opponent = UserInfo.fromJson(opponentData, isGreenTeam: !isGreenTeam);
-        print("İşlenmiş rakip: ${opponent?.nickname}, ${opponent?.winRate}"); // Debug için
-      });
-    };
-
-    _viewModel.startGame();
-  } catch (e) {
-    if (mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Oyun başlatma hatası: $e')));
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Oyun başlatma hatası: $e')));
+      }
     }
   }
-}
+
   // GameScreen sınıfına eklenecek metod
-Widget _buildBlurredBackground(GameViewModel viewModel) {
-  // Takım rengine göre arka plan resmi seç
-  String assetPath;
-  
-  // viewModel.state.isGreenTeam true ise yeşil takım, false ise kırmızı takım
-  if (viewModel.state.isGreenTeam) {
-    assetPath = 'assets/images/green.png'; // Yeşil takım için
-  } else {
-    assetPath = 'assets/images/red.png'; // Kırmızı takım için
-  }
-  
-  return Container(
-    decoration: BoxDecoration(
-      color: Colors.black,
-      image: DecorationImage(
-        image: AssetImage(assetPath),
-        fit: BoxFit.cover,
-        opacity: 0.7, // Resim opaklığı
+  Widget _buildBlurredBackground(GameViewModel viewModel) {
+    // Takım rengine göre arka plan resmi seç
+    String assetPath;
+
+    // viewModel.state.isGreenTeam true ise yeşil takım, false ise kırmızı takım
+    if (viewModel.state.isGreenTeam) {
+      assetPath = 'assets/images/green.png'; // Yeşil takım için
+    } else {
+      assetPath = 'assets/images/red.png'; // Kırmızı takım için
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.black,
+        image: DecorationImage(
+          image: AssetImage(assetPath),
+          fit: BoxFit.cover,
+          opacity: 0.7, // Resim opaklığı
+        ),
       ),
-    ),
-    child: BackdropFilter(
-      filter: ImageFilter.blur(sigmaX: 60.0, sigmaY: 60.0), // Bulanıklık efekti
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.2), // Hafif karartma
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Colors.black.withOpacity(0.2), // Üst kısımdaki siyahlık
-              Colors.black.withOpacity(0.4), // Alt kısımdaki siyahlık
-            ],
+      child: BackdropFilter(
+        filter: ImageFilter.blur(
+          sigmaX: 60.0,
+          sigmaY: 60.0,
+        ), // Bulanıklık efekti
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.black.withOpacity(0.2), // Hafif karartma
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.black.withOpacity(0.2), // Üst kısımdaki siyahlık
+                Colors.black.withOpacity(0.4), // Alt kısımdaki siyahlık
+              ],
+            ),
           ),
         ),
       ),
-    ),
-  );
-}
- @override
-Widget build(BuildContext context) {
-  return ChangeNotifierProvider.value(
-    value: _viewModel,
-    child: Consumer<GameViewModel>(
-      builder: (context, viewModel, _) {
-        return Scaffold(
-          body: Stack(
-            children: [
-              // Bulanık arka plan
-              _buildBlurredBackground(viewModel),
-              
-              // Ana içerik
-              SafeArea(
-                child: Column(
-                  children: [
-                    // Top Bar - Ayrı bir widget olarak
-                    GameTopBar(
-                      onLeftButtonPressed: () {
-                        // Geri dönüş veya istenen bir aksiyon
-                        _showSurrenderDialog(context);
-                      },
-                      onRightButtonPressed: () {
-                        // Ayarlar veya başka bir aksiyon
-                      },
-                      leftIcon: Icons.close,
-                      rightIcon: Icons.info_outline,
-                    ),
+    );
+  }
 
-                    const SizedBox(height: 10),
+  @override
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider.value(
+      value: _viewModel,
+      child: Consumer<GameViewModel>(
+        builder: (context, viewModel, _) {
+          return Scaffold(
+            body: Stack(
+              children: [
+                // Bulanık arka plan
+                _buildBlurredBackground(viewModel),
 
-                    // Opponent's Action Bar and Info
-                    GameActionBar(
-                      playerName: opponent?.nickname ?? 'Rakip',
-                      winRate: opponent?.winRate ?? '0%',
-                      blockJokerCount: viewModel.state.getJokerCount(
-                        JokerType.block,
+                // Ana içerik
+                SafeArea(
+                  child: Column(
+                    children: [
+                      // Top Bar - Ayrı bir widget olarak
+                      GameTopBar(
+                        onLeftButtonPressed: () {
+                          // Geri dönüş veya istenen bir aksiyon
+                          _showSurrenderDialog(context);
+                        },
+                        onRightButtonPressed: () {
+                          // Ayarlar veya başka bir aksiyon
+                        },
+                        leftIcon: Icons.close,
+                        rightIcon: Icons.info_outline,
                       ),
-                      blindJokerCount: viewModel.state.getJokerCount(
-                        JokerType.blind,
+
+                      const SizedBox(height: 10),
+
+                      // Opponent's Action Bar and Info
+                      GameActionBar(
+                        playerName: opponent?.nickname ?? 'Rakip',
+                        winRate: opponent?.winRate ?? '0%',
+                        blockJokerCount: viewModel.state.getJokerCount(
+                          JokerType.block,
+                        ),
+                        blindJokerCount: viewModel.state.getJokerCount(
+                          JokerType.blind,
+                        ),
+                        betJokerCount: viewModel.state.getJokerCount(
+                          JokerType.bet,
+                        ),
+                        usedJokers: viewModel.state.usedJokers,
+                        activeJoker: viewModel.state.opponentJoker,
+                        isGreenTeam:
+                            !viewModel
+                                .state
+                                .isGreenTeam, // Rakibin rengi, oyuncunun tersi olmalı
+                        onAddFriend: () {
+                          // Arkadaş ekleme fonksiyonu
+                        },
+                        onChat: null, // Chat henüz aktif değil
                       ),
-                      betJokerCount: viewModel.state.getJokerCount(JokerType.bet),
-                      usedJokers: viewModel.state.usedJokers,
-                      activeJoker: viewModel.state.opponentJoker,
-                      isGreenTeam:
-                          !viewModel
-                              .state
-                              .isGreenTeam, // Rakibin rengi, oyuncunun tersi olmalı
-                      onAddFriend: () {
-                        // Arkadaş ekleme fonksiyonu
-                      },
-                      onChat: null, // Chat henüz aktif değil
-                    ),
 
-                    // Opponent Cards Area ve Joker Bar - Stack ile üst üste konumlandırılıyor
-                    Stack(
-                      clipBehavior: Clip.none, // Taşma olabilmesi için
-                      alignment: Alignment.bottomCenter,
-                      children: [
-                        // Opponent Cards Area
-                        OpponentCardArea(
-                          playerName: opponent?.nickname ?? 'Rakip',
-                          selectedMove: viewModel.state.opponentMove,
-                          isBlindPhase: viewModel.state.isBlindPhase,
-                          availableMoves:
-                              widget.gameType == 'rps'
-                                  ? ['rock', 'paper', 'scissors']
-                                  : ['odd', 'even'],
-                          blockedMoves: viewModel.state.blockedMoves,
-                          currentPhase: viewModel.state.currentPhase,
-                          isGreenTeam:
-                              !viewModel
-                                  .state
-                                  .isGreenTeam, // DÜZELTİLDİ: Oyuncunun tam tersi renk olmalı
-                        ),
-
-                        // Opponent Joker Bar için de aynı değişiklik yapılmalı
-                        Positioned(
-                          bottom: -18.9, // Yüksekliğin yarısı
-                          child: JokerBar(
-                            viewModel: viewModel,
-                            width: 120,
-                            isOpponent:
-                                true, // Opponent joker barı olduğunu belirt
+                      // Opponent Cards Area ve Joker Bar - Stack ile üst üste konumlandırılıyor
+                      Stack(
+                        clipBehavior: Clip.none, // Taşma olabilmesi için
+                        alignment: Alignment.bottomCenter,
+                        children: [
+                          // Opponent Cards Area
+                          OpponentCardArea(
+                            playerName: opponent?.nickname ?? 'Rakip',
+                            selectedMove: viewModel.state.opponentMove,
+                            isBlindPhase: viewModel.state.isBlindPhase,
+                            availableMoves:
+                                widget.gameType == 'rps'
+                                    ? ['rock', 'paper', 'scissors']
+                                    : ['odd', 'even'],
+                            blockedMoves: viewModel.state.blockedMoves,
+                            currentPhase: viewModel.state.currentPhase,
+                            isGreenTeam:
+                                !viewModel
+                                    .state
+                                    .isGreenTeam, // DÜZELTİLDİ: Oyuncunun tam tersi renk olmalı
                           ),
-                        ),
-                      ],
-                    ),
 
-                    const SizedBox(height: 10),
-
-                    // Scoreboard
-                    _buildScoreBoard(viewModel),
-
-                    const SizedBox(height: 10),
-
-                    // Player Joker Bar ve Player Card Area bölgesi
-                    Stack(
-                      clipBehavior: Clip.none, // Taşma olabilmesi için
-                      alignment: Alignment.topCenter,
-                      children: [
-                        // Player Cards Area
-                        PlayerCardArea(
-                          playerName: currentUser?.nickname ?? 'OYUNCU',
-                          selectedMove: viewModel.state.selectedMove,
-                          isBlindPhase: viewModel.state.isBlindPhase,
-                          availableMoves:
-                              widget.gameType == 'rps'
-                                  ? ['rock', 'paper', 'scissors']
-                                  : ['odd', 'even'],
-                          blockedMoves: viewModel.state.blockedMoves,
-                          onMoveSelected: viewModel.makeMove,
-                          currentPhase: viewModel.state.currentPhase,
-                          isGreenTeam: viewModel.state.isGreenTeam,
-                          isPreparationPhase:
-                              viewModel.state.currentPhase ==
-                              GamePhase.preparation,
-                          viewModel: viewModel,
-                        ),
-
-                        // Player Joker Bar - Üstte konumlandırıldı
-                        Positioned(
-                          top: -18.9,
-                          child: JokerBar(
-                            viewModel: viewModel,
-                            width: 120,
-                            isOpponent: false, // Oyuncu joker barı
-                            onJokerPressed: (type) {
-                              // Tıklanan jokere göre joker menüsünü göster
-                              _showJokerMenu(viewModel, preSelectedJoker: type);
-                            },
+                          // Opponent Joker Bar için de aynı değişiklik yapılmalı
+                          Positioned(
+                            bottom: -18.9, // Yüksekliğin yarısı
+                            child: JokerBar(
+                              viewModel: viewModel,
+                              width: 120,
+                              isOpponent:
+                                  true, // Opponent joker barı olduğunu belirt
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
+                        ],
+                      ),
 
-                    // GameActionButtons
-                    GameActionButtons(
-                      viewModel: viewModel,
-                      playerName: currentUser?.nickname ?? 'Sen',
-                      winRate: currentUser?.winRate ?? '0%',
-                      onSurrenderPressed: () => _showSurrenderDialog(context),
-                      onJokerMenuPressed: () => _showJokerMenu(viewModel),
-                      onEmotePressed: () {
-                        // Emote menüsünü göster
-                      },
-                    ),
+                      const SizedBox(height: 10),
 
-                    const SizedBox(height: 10),
-                    GameBottomBar(
-                      onSurrenderPressed: () => _showSurrenderDialog(context),
-                      onJokerMenuPressed: () => _showJokerMenu(viewModel),
-                      viewModel: viewModel,
-                    ),
-                  ],
+                      // Scoreboard
+                      _buildScoreBoard(viewModel),
+
+                      const SizedBox(height: 10),
+
+                      // Player Joker Bar ve Player Card Area bölgesi
+                      Stack(
+                        clipBehavior: Clip.none, // Taşma olabilmesi için
+                        alignment: Alignment.topCenter,
+                        children: [
+                          // Player Cards Area
+                          PlayerCardArea(
+                            playerName: currentUser?.nickname ?? 'OYUNCU',
+                            selectedMove:
+                                viewModel
+                                    .state
+                                    .selectedMove, // Bu değer doğru aktarılıyor mu?
+                            isBlindPhase: viewModel.state.isBlindPhase,
+                            availableMoves:
+                                widget.gameType == 'rps'
+                                    ? ['rock', 'paper', 'scissors']
+                                    : ['odd', 'even'],
+                            blockedMoves: viewModel.state.blockedMoves,
+                            onMoveSelected: viewModel.makeMove,
+                            currentPhase: viewModel.state.currentPhase,
+                            isGreenTeam: viewModel.state.isGreenTeam,
+                            isPreparationPhase:
+                                viewModel.state.currentPhase ==
+                                GamePhase.preparation,
+                            viewModel: viewModel,
+                          ),
+
+                          // Player Joker Bar - Üstte konumlandırıldı
+                          Positioned(
+                            top: -18.9,
+                            child: JokerBar(
+                              viewModel: viewModel,
+                              width: 120,
+                              isOpponent: false, // Oyuncu joker barı
+                              onJokerPressed: (type) {
+                                // Tıklanan jokere göre joker menüsünü göster
+                                _showJokerMenu(
+                                  viewModel,
+                                  preSelectedJoker: type,
+                                );
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      // GameActionButtons
+                      GameActionButtons(
+                        viewModel: viewModel,
+                        playerName: currentUser?.nickname ?? 'Sen',
+                        winRate: currentUser?.winRate ?? '0%',
+                        onSurrenderPressed: () => _showSurrenderDialog(context),
+                        onJokerMenuPressed: () => _showJokerMenu(viewModel),
+                        onEmotePressed: () {
+                          // Emote menüsünü göster
+                        },
+                      ),
+
+                      const SizedBox(height: 10),
+                      GameBottomBar(
+                        onSurrenderPressed: () => _showSurrenderDialog(context),
+                        onJokerMenuPressed: () => _showJokerMenu(viewModel),
+                        viewModel: viewModel,
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ),
-        );
-      },
-    ),
-  );
-}
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
 
   Widget _buildScoreBoard(GameViewModel viewModel) {
-  return Container(
-    margin: const EdgeInsets.symmetric(horizontal: 10),
-    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-    decoration: ShapeDecoration(
-      // Arkaplan rengini kaldırdık - saydam olacak
-      color: Colors.transparent,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-    ),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        // Opponent Score - Rakip puanı
-        Text(
-          viewModel.state.opponentScore.toString(),
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            // Kırmızı/yeşil takım kontrolü - Rakibin rengi, oyuncunun tersi olmalı
-            color: viewModel.state.isGreenTeam ? Colors.red : Colors.green,
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 10),
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+      decoration: ShapeDecoration(
+        // Arkaplan rengini kaldırdık - saydam olacak
+        color: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          // Opponent Score - Rakip puanı
+          Text(
+            viewModel.state.opponentScore.toString(),
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              // Kırmızı/yeşil takım kontrolü - Rakibin rengi, oyuncunun tersi olmalı
+              color: viewModel.state.isGreenTeam ? Colors.red : Colors.green,
+            ),
           ),
-        ),
 
-        // Status Message - artık sadece Text var, Container yok
-        Text(
-          viewModel.timerText,
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: _getStatusColor(
-              viewModel.timerStatus,
-            ), // Durum rengini saydamlık olmadan uygula
+          // Status Message - artık sadece Text var, Container yok
+          Text(
+            viewModel.timerText,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: _getStatusColor(
+                viewModel.timerStatus,
+              ), // Durum rengini saydamlık olmadan uygula
+            ),
           ),
-        ),
 
-        // Player Score - Oyuncu puanı
-        Text(
-          viewModel.state.playerScore.toString(),
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: viewModel.state.isGreenTeam ? Colors.green : Colors.red,
+          // Player Score - Oyuncu puanı
+          Text(
+            viewModel.state.playerScore.toString(),
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: viewModel.state.isGreenTeam ? Colors.green : Colors.red,
+            ),
           ),
-        ),
-      ],
-    ),
-  );
-}
+        ],
+      ),
+    );
+  }
 
   Color _getStatusColor(TimerStatus status) {
     switch (status) {
@@ -447,23 +466,24 @@ Widget build(BuildContext context) {
     }
   }
 
-void _showJokerMenu(GameViewModel viewModel, {JokerType? preSelectedJoker}) {
-  showModalBottomSheet(
-    context: context,
-    backgroundColor: Colors.transparent,
-    isScrollControlled: true,
-    isDismissible: true,
-    enableDrag: true,
-    barrierColor: Colors.black.withOpacity(0.4),
-    builder: (context) => JokerMenu(
-      viewModel: viewModel,
-      preSelectedJoker: preSelectedJoker,
-      onClose: (context) {
-        Navigator.pop(context);
-      },
-    ),
-  );
-}
+  void _showJokerMenu(GameViewModel viewModel, {JokerType? preSelectedJoker}) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      isDismissible: true,
+      enableDrag: true,
+      barrierColor: Colors.black.withOpacity(0.4),
+      builder:
+          (context) => JokerMenu(
+            viewModel: viewModel,
+            preSelectedJoker: preSelectedJoker,
+            onClose: (context) {
+              Navigator.pop(context);
+            },
+          ),
+    );
+  }
 
   Widget _buildJokerOption(
     JokerType type,

@@ -6,7 +6,7 @@ class GameButtonsWidget extends StatefulWidget {
   final String gameType;
   final bool isGameAvailable;
   final Function(String gameType, int targetScore, int betAmount, bool isAIGame)
-  onStartGame; // isAIGame parametresi eklendi
+      onStartGame;
   final Map<String, dynamic>? userData;
 
   const GameButtonsWidget({
@@ -22,7 +22,6 @@ class GameButtonsWidget extends StatefulWidget {
 }
 
 class _GameButtonsWidgetState extends State<GameButtonsWidget> {
-  // Maksimum bahis kullanılsın mı?
   bool _useMaxBet = false;
 
   @override
@@ -47,18 +46,17 @@ class _GameButtonsWidgetState extends State<GameButtonsWidget> {
           filter: ImageFilter.blur(
             sigmaX: 12,
             sigmaY: 12,
-          ), // Blur efekti arttırıldı
+          ),
           child: Container(
-            width: screenWidth * 0.7, // Card genişliği ile aynı
-            // PADDING: Ana buton iç padding - 16 dikey, 24 yatay
+            width: screenWidth * 0.7,
             padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  Color(0xFFF8F939), // Sarı renk
-                  Color(0xFF76CA58), // Yeşil renk
+                  Color(0xFFF8F939),
+                  Color(0xFF76CA58),
                 ],
               ),
               borderRadius: BorderRadius.circular(16),
@@ -80,12 +78,10 @@ class _GameButtonsWidgetState extends State<GameButtonsWidget> {
                 'PLAY NOW',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 18, // Font boyutu büyütüldü
-                  fontWeight: FontWeight.w600, // Daha kalın font
-                  letterSpacing: 1, // Harfler arası mesafe arttırıldı
-                  color:
-                      Colors
-                          .black87, // Sarı-yeşil üzerine siyah metin daha okunur
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 1,
+                  color: Colors.black87,
                 ),
               ),
             ),
@@ -96,23 +92,14 @@ class _GameButtonsWidgetState extends State<GameButtonsWidget> {
   }
 
   void _showGameOptionsDialog(BuildContext context) {
-    // Kullanıcının mevcut ligi
     final String userLeague =
         widget.userData?['current_league'] ?? AppConstants.defaultLeague;
-
-    // Kullanıcının mevcut altını
     final int userGold = widget.userData?['current_gold'] ?? 0;
-
-    // Lig bilgileri
     final Map<String, dynamic> leagueInfo =
         AppConstants.leagueLimits[userLeague]!;
-
-    // Min ve max bahis
     final int minBet = leagueInfo['min_bet'];
     final int maxBet = leagueInfo['max_bet'];
     final int aiBet = leagueInfo['ai_bet'];
-
-    // Bahis seçimi için başlangıç değeri
     bool maxBetSelected = _useMaxBet;
 
     showDialog(
@@ -121,13 +108,11 @@ class _GameButtonsWidgetState extends State<GameButtonsWidget> {
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setDialogState) {
-            // Geçerli bahis değeri
             final int currentBet = maxBetSelected ? maxBet : minBet;
             final int currentAiBet = maxBetSelected ? maxBet : aiBet;
 
             return Stack(
               children: [
-                // Ana dialog
                 BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
                   child: Dialog(
@@ -161,23 +146,41 @@ class _GameButtonsWidgetState extends State<GameButtonsWidget> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          // Başlık ve Switch
-                          Padding(
-                            padding: const EdgeInsets.only(
-                              top: 10,
-                              left: 20,
-                              right: 10,
+                          // Lig bilgisi (yeni başlık alanı)
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.fromLTRB(14, 8, 8, 8),
+                            margin: const EdgeInsets.fromLTRB(8, 8, 8, 16),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: Colors.white.withOpacity(0.2),
+                                width: 0.5,
+                              ),
                             ),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                const Text(
-                                  'OYUN ŞEKLİ SEÇ',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '$userLeague Ligi',
+                                      style: const TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    Text(
+                                      '${minBet}-${maxBet} Gold',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.amber[300],
+                                      ),
+                                    ),
+                                  ],
                                 ),
                                 Row(
                                   children: [
@@ -213,102 +216,91 @@ class _GameButtonsWidgetState extends State<GameButtonsWidget> {
                             ),
                           ),
 
-                          // Başlık altına ayırıcı çizgi
+                          // Yan yana butonlar için Row
                           Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 10),
-                            child: Container(
-                              height: 1,
-                              width: double.infinity,
-                              color: Colors.white.withOpacity(0.3),
+                            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                // 3 Zafer butonu
+                                Expanded(
+                                  child: _buildOptionButton(
+                                    context,
+                                    '3',
+                                    'zafer',
+                                    'Gold: $currentBet',
+                                    () {
+                                      setState(() {
+                                        _useMaxBet = maxBetSelected;
+                                      });
+                                      Navigator.pop(context);
+                                      widget.onStartGame(
+                                        widget.gameType,
+                                        3,
+                                        currentBet,
+                                        false,
+                                      );
+                                    },
+                                    userGold >= currentBet,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                // 5 Zafer butonu
+                                Expanded(
+                                  child: _buildOptionButton(
+                                    context,
+                                    '5',
+                                    'zafer',
+                                    'Gold: $currentBet',
+                                    () {
+                                      setState(() {
+                                        _useMaxBet = maxBetSelected;
+                                      });
+                                      Navigator.pop(context);
+                                      widget.onStartGame(
+                                        widget.gameType,
+                                        5,
+                                        currentBet,
+                                        false,
+                                      );
+                                    },
+                                    userGold >= currentBet,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                // AI butonu
+                                Expanded(
+                                  child: _buildOptionButton(
+                                    context,
+                                    'AI',
+                                    'ile oyna',
+                                    'Gold: $currentAiBet',
+                                    () {
+                                      setState(() {
+                                        _useMaxBet = maxBetSelected;
+                                      });
+                                      Navigator.pop(context);
+                                      widget.onStartGame(
+                                        widget.gameType,
+                                        3,
+                                        currentAiBet,
+                                        true,
+                                      );
+                                    },
+                                    userGold >= currentAiBet,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-
-                          // Lig bilgisi
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 10),
-                            child: Text(
-                              '$userLeague Ligi: ${minBet}-${maxBet} Gold',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.amber[300],
-                              ),
-                            ),
-                          ),
-
-                          // 3 Zafer Seçeneği (Online)
-                          _buildOptionButton(
-                            context,
-                            '3 Zafer',
-                            'Gold: $currentBet',
-                            '👥 Çevrimiçi Oyna',
-                            () {
-                              setState(() {
-                                _useMaxBet = maxBetSelected;
-                              });
-                              Navigator.pop(context);
-                              widget.onStartGame(
-                                widget.gameType,
-                                3,
-                                currentBet,
-                                false,
-                              );
-                            },
-                            userGold >= currentBet,
-                            Colors.teal, // Online mod için teal rengi ekledik
-                          ),
-
-                          // 5 Zafer Seçeneği (Online)
-                          _buildOptionButton(
-                            context,
-                            '5 Zafer',
-                            'Gold: $currentBet',
-                            '👥 Çevrimiçi Oyna',
-                            () {
-                              setState(() {
-                                _useMaxBet = maxBetSelected;
-                              });
-                              Navigator.pop(context);
-                              widget.onStartGame(
-                                widget.gameType,
-                                5,
-                                currentBet,
-                                false,
-                              );
-                            },
-                            userGold >= currentBet,
-                            Colors.teal, // Online mod için teal rengi ekledik
-                          ),
-
-                          const SizedBox(height: 6),
-
-                          // Yapay Zeka Seçeneği (Farklı renk)
-                          _buildOptionButton(
-                            context,
-                            'Yapay Zeka',
-                            'Gold: $currentAiBet',
-                            '🤖 AI ile Oyna', // AI ikonunu ekledik
-                            () {
-                              setState(() {
-                                _useMaxBet = maxBetSelected;
-                              });
-                              Navigator.pop(context);
-                              widget.onStartGame(
-                                widget.gameType,
-                                3,
-                                currentAiBet,
-                                true,
-                              ); // isAIGame: true
-                            },
-                            userGold >= currentAiBet,
-                            Colors.indigo, // AI modu için farklı renk
-                          ),
+                          
+                          const SizedBox(height: 8),
                         ],
                       ),
                     ),
                   ),
                 ),
 
-                // Popup altındaki çarpı ikonu (aynı kalacak)
                 Positioned(
                   bottom: 50,
                   left: 0,
@@ -358,91 +350,60 @@ class _GameButtonsWidgetState extends State<GameButtonsWidget> {
     BuildContext context,
     String title,
     String subtitle,
-    String description, // Açıklama eklendi
+    String goldText,
     VoidCallback onTap,
     bool canPlay,
-    Color? color, // Renk parametresi eklendi (isteğe bağlı)
   ) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: canPlay ? onTap : null,
-        splashColor: Colors.transparent,
-        highlightColor: Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+        splashColor: Colors.white.withOpacity(0.1),
+        highlightColor: Colors.white.withOpacity(0.05),
         child: Container(
-          width: double.infinity,
-          margin: const EdgeInsets.symmetric(vertical: 1, horizontal: 1),
-          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors:
-                  canPlay
-                      ? [
-                        (color ?? Colors.black).withOpacity(0.6),
-                        (color ?? Colors.black).withOpacity(0.4),
-                      ]
-                      : [
-                        Colors.black.withOpacity(0.4),
-                        Colors.black.withOpacity(0.2),
-                      ],
-            ),
+            color: Colors.black.withOpacity(0.5),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color:
-                  canPlay
-                      ? (color ?? Colors.white).withOpacity(0.3)
-                      : Colors.white.withOpacity(0.1),
+              color: canPlay ? Colors.white.withOpacity(0.3) : Colors.white.withOpacity(0.1),
               width: 0.5,
             ),
           ),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Başlık ve alt başlık
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // Seçenek başlığı (sol tarafta)
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: canPlay ? Colors.white : Colors.grey,
-                    ),
-                  ),
-
-                  // Gold miktarı (sağ tarafta)
-                  Text(
-                    subtitle,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color:
-                          canPlay
-                              ? Colors.amber.shade300
-                              : Colors.grey.shade600,
-                    ),
-                  ),
-                ],
-              ),
-
-              // Açıklama
-              if (description.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(top: 8.0),
-                  child: Text(
-                    description,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color:
-                          canPlay
-                              ? Colors.white.withOpacity(0.7)
-                              : Colors.grey.withOpacity(0.5),
-                    ),
-                  ),
+              // Büyük sayı/yazı
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 30,
+                  fontWeight: FontWeight.bold,
+                  color: canPlay ? Colors.white : Colors.grey,
                 ),
+                textAlign: TextAlign.center,
+              ),
+              
+              // Alt yazı
+              Text(
+                subtitle,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: canPlay ? Colors.white.withOpacity(0.8) : Colors.grey.withOpacity(0.5),
+                ),
+                textAlign: TextAlign.center,
+              ),
+              
+              // Gold miktarı
+              Text(
+                goldText,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: canPlay ? Colors.amber.shade300 : Colors.grey.shade600,
+                ),
+                textAlign: TextAlign.center,
+              ),
             ],
           ),
         ),
@@ -454,7 +415,6 @@ class _GameButtonsWidgetState extends State<GameButtonsWidget> {
     return Container(
       width: MediaQuery.of(context).size.width * 0.7,
       height: 56,
-      // MARGIN: Coming Soon buton dış margin - yatay 20
       margin: const EdgeInsets.symmetric(horizontal: 20),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
@@ -484,7 +444,6 @@ class _GameButtonsWidgetState extends State<GameButtonsWidget> {
                   color: Colors.white.withOpacity(0.7),
                   size: 20,
                 ),
-                // SPACING: İkon ile metin arası - 8
                 const SizedBox(width: 8),
                 Text(
                   'COMING SOON',

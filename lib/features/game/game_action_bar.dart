@@ -33,9 +33,6 @@ class GameActionBar extends StatelessWidget {
 
  @override
  Widget build(BuildContext context) {
-   // Debug için gelen değerleri yazdır
-   print('DEBUG_ACTION_BAR: playerName: $playerName, winRate: $winRate, isGreenTeam: $isGreenTeam');
-   
    // Takım rengine göre arkaplan rengi seçimi
    final Color backgroundColor = isGreenTeam 
        ? AppColors.greenSecondary  // Yeşil takım için
